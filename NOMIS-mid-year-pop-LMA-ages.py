@@ -218,7 +218,9 @@ if os.path.exists("./progress.txt"):
     
 print("Starting at chunk {}, offset {}".format(output_counter, intRecordController))
 
+finish = False
 # The links below are limited to the first 25,000 cells per call.
+
 while True:
     
     start = datetime.datetime.now()
@@ -230,15 +232,15 @@ while True:
     dataframe = pd.read_csv(stream, engine='c', na_filter=False)
 
     if (dataframe.empty):
-        print("Upload finished")
-        break
+        print("Uploading final csv")
+        finish = True
 
     frames = [final_df, dataframe]
     final_df = pd.concat(frames)
     
     records_since_write = intRecordController - last_index
     
-    if records_since_write >= 499999:
+    if records_since_write >= 499999 or finish == True:
         
         print("starting write at", intRecordController, "rows, at ", datetime.datetime.now())
         try_count = 1
@@ -301,6 +303,10 @@ while True:
         except Exception as e:
             raise e
         output_counter +=1
+        
+    #Final chunk written, we're done
+    if finish:
+        break
     
     intRecordController = intRecordController + 25000
         
